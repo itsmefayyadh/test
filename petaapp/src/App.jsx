@@ -47,7 +47,7 @@ function App() {
   // Protect login-required pages
   const protectedPages = ['laporan', 'riwayat', 'detail', 'admin'];
   if (activePage === 'login' || (protectedPages.includes(activePage) && !isLoggedIn)) {
-    return <LoginPage onLogin={handleLoginSuccess} />;
+    return <LoginPage onLogin={handleLoginSuccess} onBack={() => setActivePage('sungai')} />;
   }
 
   // Redirect non-admins away from admin page

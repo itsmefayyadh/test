@@ -85,6 +85,27 @@
   max-width: 380px;
 }
 
+.login-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 24px;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.login-back-btn:hover {
+  color: #0f172a;
+  transform: translateX(-4px);
+}
+
 .login-header {
   margin-bottom: 48px;
   text-align: center;

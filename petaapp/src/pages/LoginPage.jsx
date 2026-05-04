@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Map, ArrowRight, AlertCircle } from 'lucide-react';
+import { Map, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import './LoginPage.css';
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage({ onLogin, onBack }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -51,6 +51,10 @@ export default function LoginPage({ onLogin }) {
 
       <div className="login-side-form">
         <div className="form-container">
+          <button type="button" className="login-back-btn" onClick={onBack}>
+            <ArrowLeft size={18} />
+            Kembali ke Beranda
+          </button>
           <div className="login-header">
             <h2>Selamat Datang Kembali</h2>
             <p>Silakan masuk ke akun Anda untuk mengelola data geografis.</p>
