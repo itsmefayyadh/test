@@ -54,7 +54,7 @@ export default function LaporanPage() {
       data.append('description', formData.description);
       formData.images.forEach(img => data.append('images', img));
 
-      await axios.post('http://localhost:5000/api/reports', data, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/reports`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

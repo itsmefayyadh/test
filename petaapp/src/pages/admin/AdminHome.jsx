@@ -32,8 +32,8 @@ export default function AdminHome() {
     try {
       const token = localStorage.getItem('token');
       const [reportsRes, usersRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/reports', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${import.meta.env.VITE_API_URL}/api/reports`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/users`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       const reports = reportsRes.data;

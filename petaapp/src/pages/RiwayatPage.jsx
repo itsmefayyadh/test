@@ -24,7 +24,7 @@ export default function RiwayatPage({ onViewDetail }) {
     const fetchReports = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/reports', {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/reports`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setReports(res.data);

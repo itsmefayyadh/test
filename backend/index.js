@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 const db = require('./db');
 const auth = require('./auth');
 require('dotenv').config();
@@ -11,23 +11,24 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Multer setup for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
-});
-const upload = multer({ 
-  storage, 
-  limits: { fileSize: 20 * 1024 * 1024 } // Increase limit to 20MB
+// Supabase client (server-side, uses service role key)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
+// Multer: store in memory (for Supabase upload, no disk needed)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true,
+}));
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.get('/', (req, res) => {
@@ -36,10 +37,9 @@ app.get('/', (req, res) => {
 
 // Login Endpoint
 app.post('/api/login', async (req, res) => {
-  const { identifier, password } = req.body; // identifier can be email or username
+  const { identifier, password } = req.body;
 
   try {
-    // 1. Find user by email or username
     const userQuery = await db.query(
       'SELECT * FROM users WHERE email = $1 OR username = $2',
       [identifier, identifier]
@@ -51,20 +51,17 @@ app.post('/api/login', async (req, res) => {
 
     const user = userQuery.rows[0];
 
-    // 2. Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Kredensial tidak valid' });
     }
 
-    // 3. Generate JWT Token
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' } // Token valid for 1 day
+      { expiresIn: '1d' }
     );
 
-    // 4. Return success
     res.json({
       message: 'Login berhasil',
       token,
@@ -86,7 +83,6 @@ app.post('/api/register', async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    // Check if user exists
     const checkUser = await db.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
     if (checkUser.rows.length > 0) {
       return res.status(400).json({ error: 'Username atau Email sudah terdaftar' });
@@ -113,16 +109,38 @@ app.post('/api/reports', auth, upload.array('images', 10), async (req, res) => {
   const { type, urgency, location, description } = req.body;
   const user_id = req.user.id;
 
-  // Build comma-separated image URLs
-  const imageUrls = req.files && req.files.length > 0
-    ? req.files.map(f => `http://localhost:${process.env.PORT || 5000}/uploads/${f.filename}`).join(',')
-    : null;
-
   try {
+    let imageUrls = null;
+
+    // Upload images to Supabase Storage
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map(async (file) => {
+        const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
+        const { error } = await supabase.storage
+          .from('laporan-images')
+          .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false,
+          });
+
+        if (error) throw new Error(`Upload failed: ${error.message}`);
+
+        const { data: publicData } = supabase.storage
+          .from('laporan-images')
+          .getPublicUrl(fileName);
+
+        return publicData.publicUrl;
+      });
+
+      const urls = await Promise.all(uploadPromises);
+      imageUrls = urls.join(',');
+    }
+
     const result = await db.query(
       'INSERT INTO reports (user_id, type, urgency, location, description, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [user_id, type, urgency, location, description, imageUrls]
     );
+
     res.status(201).json({
       message: 'Laporan berhasil dikirim',
       report: result.rows[0]
@@ -144,7 +162,7 @@ app.get('/api/reports', auth, async (req, res) => {
     }
 
     query += ' ORDER BY r.created_at DESC';
-    
+
     const result = await db.query(query, params);
     res.json(result.rows);
   } catch (err) {
@@ -208,7 +226,7 @@ app.delete('/api/reports/:id', auth, async (req, res) => {
 // Manage Users (Admin Only)
 app.post('/api/users', auth, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Akses ditolak' });
-  
+
   const { username, email, password, role } = req.body;
   try {
     const checkUser = await db.query('SELECT * FROM users WHERE email = $1 OR username = $2', [email, username]);
@@ -227,13 +245,13 @@ app.post('/api/users', auth, async (req, res) => {
 
 app.put('/api/users/:id', auth, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Akses ditolak' });
-  
+
   const { id } = req.params;
   const { username, email, role, password } = req.body;
   try {
     let query = 'UPDATE users SET username = $1, email = $2, role = $3';
     let params = [username, email, role, id];
-    
+
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       query += ', password = $4 WHERE id = $5 RETURNING id, username, email, role, created_at';
@@ -274,7 +292,6 @@ app.delete('/api/users/:id', auth, async (req, res) => {
   }
 
   try {
-    // Delete reports first or they will be orphaned (if no cascade)
     await db.query('DELETE FROM reports WHERE user_id = $1', [id]);
     await db.query('DELETE FROM users WHERE id = $1', [id]);
     res.json({ message: 'User berhasil dihapus' });
@@ -284,13 +301,13 @@ app.delete('/api/users/:id', auth, async (req, res) => {
   }
 });
 
-// Example route to check DB connection
+// DB connection test
 app.get('/db-test', async (req, res) => {
   try {
     const result = await db.query('SELECT NOW()');
-    res.json({ 
-      status: 'Database Connected', 
-      time: result.rows[0].now 
+    res.json({
+      status: 'Database Connected',
+      time: result.rows[0].now
     });
   } catch (err) {
     console.error(err);
@@ -298,7 +315,7 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
-// Multer Error Handling Middleware
+// Multer Error Handling
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -313,3 +330,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+module.exports = app;

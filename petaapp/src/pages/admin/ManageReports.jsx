@@ -24,7 +24,7 @@ export default function ManageReports({ onSelectReport }) {
   const fetchReports = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/reports', {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/reports`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setReports(res.data);
@@ -40,7 +40,7 @@ export default function ManageReports({ onSelectReport }) {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/reports/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/reports/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setReports(reports.filter(r => r.id !== id));

@@ -17,7 +17,7 @@ export default function ManageUsers() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/users', {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(res.data);
@@ -49,12 +49,12 @@ export default function ManageUsers() {
     const token = localStorage.getItem('token');
     try {
       if (editingUser) {
-        const res = await axios.put(`http://localhost:5000/api/users/${editingUser.id}`, formData, {
+        const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/users/${editingUser.id}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(users.map(u => u.id === editingUser.id ? res.data : u));
       } else {
-        const res = await axios.post('http://localhost:5000/api/users', formData, {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/users`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers([res.data, ...users]);
@@ -70,7 +70,7 @@ export default function ManageUsers() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/users/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(users.filter(u => u.id !== id));

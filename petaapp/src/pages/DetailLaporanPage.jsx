@@ -39,7 +39,7 @@ export default function DetailLaporanPage({ report: initialReport, onBack, user 
     setUpdating(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.patch(`http://localhost:5000/api/reports/${report.id}/status`,
+      const response = await axios.patch(`${import.meta.env.VITE_API_URL}/api/reports/${report.id}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
