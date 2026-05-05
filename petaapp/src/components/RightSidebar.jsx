@@ -51,13 +51,13 @@ export default function RightSidebar({ activeDataType, onFeatureClick }) {
     <aside className="right-sidebar">
       <div className="rs-header">
         <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 20px 0', textAlign: 'left' }}>
-          {activeDataType === 'sungai' ? 'Direktori Sungai' : 'Desa Adiwarno, Jawa Tengah'}
+          {activeDataType === 'sungai' ? 'Direktori Sungai' : 'Desa Adiwarno, Wonosobo, Jateng'}
         </h2>
 
         {activeDataType === 'sawah' && (
           <div className="village-content">
             <p className="village-desc" style={{ textAlign: 'justify', color: '#475569', fontSize: '13px', lineHeight: '1.6' }}>
-              Sawah merupakan urat nadi perekonomian di Desa Adiwarno, Kecamatan Buayan, di mana potensi persawahan menjadi sektor yang paling menonjol berkat kondisi alam dataran rendah yang sangat subur. Sebagai sektor ekonomi utama, sebagian besar penduduk desa menggantungkan hidupnya sebagai petani padi, buruh tani, maupun pengusaha penggilingan padi. Karakteristik lahan yang strategis di wilayah Buayan memungkinkan penanaman komoditas tanaman semusim dilakukan secara teratur karena tidak hanya mengandalkan air hujan semata.
+              Sawah merupakan urat nadi perekonomian di Desa Adiwarno, Kecamatan Selomerto, Kab Wonosobo, Jateng, di mana potensi persawahan menjadi sektor yang paling menonjol berkat kondisi alam yang sangat subur. Sebagai sektor ekonomi utama, sebagian besar penduduk desa menggantungkan hidupnya sebagai petani padi, buruh tani, maupun pengusaha penggilingan padi. Karakteristik lahan yang strategis di wilayah Selomerto memungkinkan penanaman komoditas tanaman semusim dilakukan secara teratur karena tidak hanya mengandalkan air hujan semata.
               <br/><br/>
               Keberlangsungan pertanian di Desa Adiwarno didukung oleh sistem irigasi teknis dan setengah teknis, serta diperkuat dengan program strategis pompanisasi untuk meningkatkan indeks pertanaman pada lahan-lahan yang membutuhkan tambahan suplai air. Meskipun fokus utamanya adalah padi sawah dengan varietas unggul seperti Inpari 32 yang tahan penyakit dan berproduktivitas tinggi, lahan di desa ini juga sangat potensial untuk tanaman pangan lain seperti jagung, kacang tanah, kedelai, hingga ubi kayu. Selain itu, keberadaan persawahan ini menciptakan integrasi ekonomi yang baik dengan mendukung sektor peternakan dan perikanan melalui pemanfaatan berbagai produk sampingan hasil pertanian.
             </p>
