@@ -13,7 +13,7 @@ export default function LeftSidebar() {
   useEffect(() => {
     Promise.all([
       fetch('/dataMap/sungefay.geojson').then(res => res.json()),
-      fetch('/dataMap/sawah.geojson').then(res => res.json())
+      fetch('/dataMap/sawah_semua_blok.geojson').then(res => res.json())
     ]).then(([rivers, sawah]) => {
       const riverCount = rivers.features.length;
       const sawahCount = sawah.features.length;
@@ -24,16 +24,20 @@ export default function LeftSidebar() {
         if (f.properties.SHAPE_Leng) totalLength += f.properties.SHAPE_Leng;
       });
 
-      let totalArea = 0;
+      let totalAreaM2 = 0;
       sawah.features.forEach(f => {
-        if (f.properties.SHAPE_Area) totalArea += f.properties.SHAPE_Area;
+        if (f.properties.PopupInfo) {
+          const areaStr = f.properties.PopupInfo.split(' ')[0];
+          const areaVal = parseFloat(areaStr.replace(',', '.'));
+          if (!isNaN(areaVal)) totalAreaM2 += areaVal;
+        }
       });
 
       setStats({
         totalRivers: riverCount,
         totalSawah: sawahCount,
         riverLength: (totalLength * 111).toFixed(2), // Rough km conversion
-        sawahArea: (totalArea * 10000).toFixed(2) // Rough hectares/sqm conversion
+        sawahArea: (totalAreaM2 / 10000).toFixed(2) // Convert m2 to Hectares
       });
     });
   }, []);

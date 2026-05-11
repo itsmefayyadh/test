@@ -1,129 +1,100 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import MapComponent from './components/MapComponent';
-import LoginPage from './pages/LoginPage';
+import RiverDataPage from './components/RiverDataPage';
 import LaporanPage from './pages/LaporanPage';
 import RiwayatPage from './pages/RiwayatPage';
-import DetailLaporanPage from './pages/DetailLaporanPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import LoginPage from './pages/LoginPage';
+import AdminHome from './pages/admin/AdminHome';
 import './App.css';
 
 function App() {
-  const [selectedFeature, setSelectedFeature] = useState(null);
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [activePage, setActivePage] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      return parsed.role === 'admin' ? 'admin' : 'sungai';
-    }
-    return 'sungai';
-  });
-  const [selectedReport, setSelectedReport] = useState(null); // For detail view
+  const [activePage, setActivePage] = useState('sawah');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
 
-  const isLoggedIn = !!user;
+  // Check for existing session
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    if (token && storedUser) {
+      setIsLoggedIn(true);
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const [selectedFeature, setSelectedFeature] = useState(null);
 
   const handleLoginSuccess = (userData) => {
+    setIsLoggedIn(true);
     setUser(userData);
-    if (userData.role === 'admin') {
-      setActivePage('admin');
-    } else {
-      setActivePage('sungai');
-    }
+    setShowLogin(false);
+  };
+
+  const handleFeatureClick = (feature) => {
+    setSelectedFeature(feature);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setIsLoggedIn(false);
     setUser(null);
-    setActivePage('sungai');
+    setActivePage('sawah');
   };
 
-  // Protect login-required pages
-  const protectedPages = ['laporan', 'riwayat', 'detail', 'admin'];
-  if (activePage === 'login' || (protectedPages.includes(activePage) && !isLoggedIn)) {
-    return <LoginPage onLogin={handleLoginSuccess} onBack={() => setActivePage('sungai')} />;
-  }
-
-  // Redirect non-admins away from admin page
-  if (activePage === 'admin' && user?.role !== 'admin') {
-    setActivePage('sungai');
-    return null;
-  }
-
-  // Render the correct page body
-  const renderPage = () => {
-    if (activePage === 'laporan') return <LaporanPage />;
-    
-    if (activePage === 'detail' && selectedReport) {
-      return (
-        <DetailLaporanPage 
-          report={selectedReport} 
-          onBack={() => setActivePage('riwayat')} 
-          user={user}
-        />
-      );
+  const renderContent = () => {
+    if (showLogin) {
+      return <LoginPage onLoginSuccess={handleLoginSuccess} onCancel={() => setShowLogin(false)} />;
     }
 
-    if (activePage === 'riwayat') {
-      return (
-        <RiwayatPage 
-          onViewDetail={(report) => {
-            setSelectedReport(report);
-            setActivePage('detail');
-          }} 
-        />
-      );
+    switch (activePage) {
+      case 'sungai':
+        return (
+          <div className="dashboard-layout">
+            <LeftSidebar />
+            <main className="main-content">
+              <MapComponent activeDataType="sungai" zoomToFeature={selectedFeature} />
+            </main>
+            <RightSidebar activeDataType="sungai" onFeatureClick={handleFeatureClick} />
+          </div>
+        );
+      case 'sawah':
+        return (
+          <div className="dashboard-layout">
+            <LeftSidebar />
+            <main className="main-content">
+              <MapComponent activeDataType="sawah" zoomToFeature={selectedFeature} />
+            </main>
+            <RightSidebar activeDataType="sawah" onFeatureClick={handleFeatureClick} />
+          </div>
+        );
+      case 'laporan':
+        return <LaporanPage />;
+      case 'riwayat':
+        return <RiwayatPage user={user} />;
+      case 'admin':
+        return <AdminHome />;
+      default:
+        return <MapComponent activeDataType="sawah" />;
     }
-
-    if (activePage === 'admin') {
-      return (
-        <AdminDashboard 
-          user={user} 
-          onLogout={handleLogout} 
-          onBack={() => setActivePage('sungai')} 
-        />
-      );
-    }
-
-    // Default: map view for sungai/sawah
-    return (
-      <div className="main-content">
-        <LeftSidebar />
-        <div className="map-wrapper">
-          <MapComponent 
-            activeDataType={activePage}
-            selectedFeatureFromSidebar={selectedFeature} 
-          />
-        </div>
-        <RightSidebar 
-          activeDataType={activePage} 
-          onFeatureClick={(feature) => setSelectedFeature(feature)} 
-        />
-      </div>
-    );
   };
 
   return (
     <div className="app-container">
-      {activePage !== 'admin' && (
-        <Header 
-          activePage={activePage} 
-          onPageChange={(page) => {
-            setSelectedReport(null);
-            setActivePage(page);
-          }} 
-          onLoginClick={() => isLoggedIn ? handleLogout() : setActivePage('login')}
-          isLoggedIn={isLoggedIn}
-          user={user}
-        />
-      )}
-      {renderPage()}
+      <Header 
+        activePage={activePage} 
+        onPageChange={setActivePage} 
+        onLoginClick={isLoggedIn ? handleLogout : () => setShowLogin(true)}
+        isLoggedIn={isLoggedIn}
+        user={user}
+      />
+      <div className="content-area">
+        {renderContent()}
+      </div>
     </div>
   );
 }

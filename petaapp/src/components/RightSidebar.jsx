@@ -9,7 +9,7 @@ export default function RightSidebar({ activeDataType, onFeatureClick }) {
 
   useEffect(() => {
     setLoading(true);
-    const file = activeDataType === 'sungai' ? '/dataMap/sungefay.geojson' : '/dataMap/sawah.geojson';
+    const file = activeDataType === 'sungai' ? '/dataMap/sungefay.geojson' : '/dataMap/sawah_semua_blok.geojson';
     
     fetch(file)
       .then((res) => res.json())
@@ -28,7 +28,7 @@ export default function RightSidebar({ activeDataType, onFeatureClick }) {
               name: f.properties.NAMOBJ || (activeDataType === 'sungai' ? `Sungai ${index + 1}` : `Area Sawah ${index + 1}`),
               remark: f.properties.REMARK || '-',
               length: f.properties.SHAPE_Leng ? (f.properties.SHAPE_Leng * 111).toFixed(2) : '-',
-              area: f.properties.SHAPE_Area ? (f.properties.SHAPE_Area * 10000).toFixed(2) : '-',
+              area: f.properties.PopupInfo ? f.properties.PopupInfo.split(' ')[0].replace(',', '.') : '0',
               rawFeature: f
             };
           });
