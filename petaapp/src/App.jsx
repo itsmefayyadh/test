@@ -7,6 +7,7 @@ import RiverDataPage from './components/RiverDataPage';
 import LaporanPage from './pages/LaporanPage';
 import RiwayatPage from './pages/RiwayatPage';
 import LoginPage from './pages/LoginPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHome from './pages/admin/AdminHome';
 import './App.css';
 
@@ -48,7 +49,7 @@ function App() {
 
   const renderContent = () => {
     if (showLogin) {
-      return <LoginPage onLoginSuccess={handleLoginSuccess} onCancel={() => setShowLogin(false)} />;
+      return <LoginPage onLogin={handleLoginSuccess} onBack={() => setShowLogin(false)} />;
     }
 
     switch (activePage) {
@@ -77,7 +78,7 @@ function App() {
       case 'riwayat':
         return <RiwayatPage user={user} />;
       case 'admin':
-        return <AdminHome />;
+        return <AdminDashboard user={user} onLogout={handleLogout} onBack={() => setActivePage('sawah')} />;
       default:
         return <MapComponent activeDataType="sawah" />;
     }
@@ -85,13 +86,15 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header 
-        activePage={activePage} 
-        onPageChange={setActivePage} 
-        onLoginClick={isLoggedIn ? handleLogout : () => setShowLogin(true)}
-        isLoggedIn={isLoggedIn}
-        user={user}
-      />
+      {!showLogin && activePage !== 'admin' && (
+        <Header 
+          activePage={activePage} 
+          onPageChange={setActivePage} 
+          onLoginClick={isLoggedIn ? handleLogout : () => setShowLogin(true)}
+          isLoggedIn={isLoggedIn}
+          user={user}
+        />
+      )}
       <div className="content-area">
         {renderContent()}
       </div>

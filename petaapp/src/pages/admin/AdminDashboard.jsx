@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users, FileText, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, ArrowLeft } from 'lucide-react';
 import ManageReports from './ManageReports';
 import ManageUsers from './ManageUsers';
 import AdminHome from './AdminHome';
@@ -68,6 +68,10 @@ export default function AdminDashboard({ user, onLogout, onBack }) {
           </button>
 
           <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <button className="admin-nav-item" onClick={() => onBack()}>
+              <ArrowLeft size={18} />
+              Kembali ke Beranda
+            </button>
             <button className="admin-nav-item" style={{ color: '#f87171' }} onClick={() => onLogout()}>
               <LogOut size={18} />
               Keluar
